@@ -67,7 +67,11 @@ const profile = new Profile({
 
 await profile.save()
 
-return res.status(201).json({ status: "success", data: profile })
+const profileObj = profile.toObject()
+profileObj.id = profileObj._id
+delete profileObj._id
+delete profileObj.__v
+return res.status(201).json({ status: "success", data: profileObj })
 
 } catch(err) {
     return res.status(500).json({ status: "error", message: "Server error" })
