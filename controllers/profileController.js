@@ -19,8 +19,12 @@ if (typeof name != 'string'){
 
 const existing = await Profile.findOne({ name: name.toLowerCase() })
 if (existing) {
-    return res.status(200).json({ status: "success", message: "Profile already exists", data: existing })
-}
+    const existingObj = existing.toObject()
+    existingObj.id = existingObj._id
+    delete existingObj._id
+    delete existingObj.__v
+    return res.status(200).json({ status: "success", message: "Profile already exists", data: existingObj })
+};
 
 const [genderRes, ageRes, nationalityRes] = await Promise.all([
     axios.get(`https://api.genderize.io?name=${name}`),
@@ -78,16 +82,23 @@ return res.status(201).json({ status: "success", data: profileObj })
 }
 }
 
-const getAllProfiles = async  (req, res) => {
+const getAllProfiles = async (req, res) => {
     try {
-    const filter = {}
-    if (req.query.gender) filter.gender = req.query.gender.toLowerCase()
-    if (req.query.country_id) filter.country_id = req.query.country_id
-    if(req.query.age_group) filter.age_group = req.query.age_group.toLowerCase()
+        const filter = {}
+        if (req.query.gender) filter.gender = req.query.gender.toLowerCase()
+        if (req.query.country_id) filter.country_id = req.query.country_id
+        if (req.query.age_group) filter.age_group = req.query.age_group.toLowerCase()
 
         const profiles = await Profile.find(filter)
-        return res.status(200).json({ status: "success", count: profiles.length, data: profiles })
-    } catch (err){
+        const profilesObj = profiles.map(p => {
+            const obj = p.toObject()
+            obj.id = obj._id
+            delete obj._id
+            delete obj.__v
+            return obj
+        })
+        return res.status(200).json({ status: "success", count: profilesObj.length, data: profilesObj })
+    } catch (err) {
         return res.status(500).json({ status: "error", message: "Server error" })
     }
 }
@@ -96,7 +107,13 @@ const getSingleProfile = async (req, res) => {
     try{
         const profile = await Profile.findById(req.params.id)
         if (!profile) return res.status(404).json({ status: "error", message: "Profile not found" })
-            return res.status(200).json({ status: "success", data: profile })
+           
+        const profileObj = profile.toObject()
+        profileObj.id = profileObj._id
+        delete profileObj._id
+        delete profileObj.__v
+        return res.status(200).json({ status: "success", data: profileObj })
+    
     } catch (err) {
         return res.status(500).json({ status: "error", message: "Server error" })
     }

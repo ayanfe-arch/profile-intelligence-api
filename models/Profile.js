@@ -12,7 +12,17 @@ const profileSchema = new mongoose.Schema({
     country_id: String,
     country_probability: Number,
     created_at: Date
-});
+}, {
+    toJSON: {
+        transform: (doc, ret) => {
+            ret.id = ret._id
+            delete ret._id
+            delete ret.__v
+            return ret
+        }
+    }
+}
+);
 
 const Profile = mongoose.model('Profile', profileSchema);
 module.exports = Profile;
